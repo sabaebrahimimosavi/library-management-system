@@ -62,4 +62,9 @@ urlpatterns = [
     ),
 
     path("api/v1/books/", include("books.urls")),
+
+    path(
+        "api/v1/loans/",
+        include("loans.urls"),
+    ),
 ]
