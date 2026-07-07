@@ -67,4 +67,9 @@ urlpatterns = [
         "api/v1/loans/",
         include("loans.urls"),
     ),
+
+    path(
+        "api/v1/",
+         include("reservations.urls")
+    ),
 ]

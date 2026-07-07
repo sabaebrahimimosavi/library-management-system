@@ -1,9 +1,10 @@
 from django.db import transaction
 from django.utils import timezone
 
-from books.models import Book
-
 from .models import Loan
+
+
+
 
 class LoanService:
 
@@ -50,5 +51,10 @@ class LoanService:
                 "available_copies",
             ]
         )
+
+        next_reservation = ReservationService.get_next_pending_reservation(book)
+
+        if next_reservation:
+            NotificationService.notify_book_available(next_reservation)
 
         return loan
