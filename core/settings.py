@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    "drf_spectacular",
     'accounts',
 ]
 
@@ -106,6 +107,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Password reset token lifetime (Django's default is PASSWORD_RESET_TIMEOUT,
+# in seconds; default 259200 = 3 days).
+
+PASSWORD_RESET_TIMEOUT = config(
+    "PASSWORD_RESET_TIMEOUT", default=3600, cast=int
+)  # 1 hour
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -126,3 +133,39 @@ STATIC_URL = 'static/'
 
 # Use custom user model instead of Django's default auth.User
 AUTH_USER_MODEL = "accounts.User"
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "20/min",
+        "user": "60/min",
+        "password_reset": "5/hour",
+        "login": "10/min",
+    },
+}
+
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Online Library Management System API",
+    "DESCRIPTION": (
+        "REST API for the Online Library Management System: user "
+        "management, book catalog, loans, reservations, reviews, "
+        "notifications, fines/payments, and recommendations."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="no-reply@library.local")
+FRONTEND_BASE_URL = config("FRONTEND_BASE_URL", default="http://localhost:3000")
