@@ -72,4 +72,9 @@ urlpatterns = [
         "api/v1/",
          include("reservations.urls")
     ),
+
+    path(
+        "api/v1/notifications/",
+         include("notifications.urls")
+    ),
 ]

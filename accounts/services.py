@@ -1,6 +1,4 @@
 """
-accounts/services.py  (NEW FILE)
-
 Business logic for authentication-adjacent workflows, kept out of views
 and serializers per the project's "no business logic in views / no fat
 serializers" rule.

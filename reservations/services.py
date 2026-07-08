@@ -63,3 +63,32 @@ class ReservationService:
         reservation.fulfilled_at = timezone.now()
         reservation.save(update_fields=["status", "fulfilled_at"])
         return reservation
+
+    @staticmethod
+    def get_pending_reservations(*, book):
+        """
+        Returns ALL pending reservations for `book`, oldest first.
+ 
+        Used by LoanService.return_book() to notify every waiting member
+        when a copy becomes available — not just the head of the queue,
+        since whoever actually shows up to borrow it doesn't have to be
+        the first person who reserved it.
+        """
+        return Reservation.objects.filter(
+            book=book, status=Reservation.Status.PENDING
+        ).order_by("reserved_at")
+ 
+    @staticmethod
+    def get_pending_reservation_for_user(*, book, user):
+        """
+        Returns this user's own PENDING reservation for `book`, if any,
+        else None.
+ 
+        Used by LoanService.borrow_book() to detect that a borrowing
+        member is acting on their own reservation, so it can be marked
+        fulfilled (removing it from the pending queue) at the moment
+        they actually borrow — not when they were merely notified.
+        """
+        return Reservation.objects.filter(
+            book=book, user=user, status=Reservation.Status.PENDING
+        ).first()

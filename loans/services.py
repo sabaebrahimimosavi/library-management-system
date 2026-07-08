@@ -1,9 +1,10 @@
 from django.db import transaction
 from django.utils import timezone
-
+ 
+from notifications.services import NotificationService
+from reservations.services import ReservationService
+ 
 from .models import Loan
-
-
 
 
 class LoanService:
@@ -23,6 +24,12 @@ class LoanService:
 
         book.available_copies -= 1
         book.save(update_fields=["available_copies"])
+
+        own_pending_reservation = ReservationService.get_pending_reservation_for_user(
+            book=book, user=user
+        )
+        if own_pending_reservation is not None:
+            ReservationService.mark_fulfilled(own_pending_reservation)
 
         return loan
 
@@ -52,9 +59,9 @@ class LoanService:
             ]
         )
 
-        next_reservation = ReservationService.get_next_pending_reservation(book)
-
-        if next_reservation:
-            NotificationService.notify_book_available(next_reservation)
-
+        pending_reservations = ReservationService.get_pending_reservations(book=book)
+       
+        for reservation in pending_reservations:
+            NotificationService.notify_reservation_available(reservation)
+        
         return loan
