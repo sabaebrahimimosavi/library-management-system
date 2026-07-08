@@ -79,6 +79,23 @@ class BookSerializer(serializers.ModelSerializer):
         source="publisher.name",
         read_only=True
     )
+
+    # Populated from the annotated queryset in BookViewSet (see
+    # books/views.py) — average_rating_annotated / review_count_annotated
+    # come from Avg()/Count() over the reverse `reviews` relation added
+    # by the reviews app (Review.book, related_name="reviews"). Falls
+    # back to None/0 if a Book instance wasn't fetched through that
+    # annotated queryset (e.g. Book.objects.create() in a shell).
+    average_rating = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
+
+    def get_average_rating(self, obj):
+        value = getattr(obj, "average_rating_annotated", None)
+        return round(float(value), 2) if value is not None else None
+
+    def get_review_count(self, obj):
+        return getattr(obj, "review_count_annotated", 0)
+
     class Meta:
         model = Book
         fields = [
@@ -98,6 +115,8 @@ class BookSerializer(serializers.ModelSerializer):
             "author_name",
             "genre_name",
             "publisher_name",
+            "average_rating",
+            "review_count",
         ]
         read_only_fields = [
             "id",

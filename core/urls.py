@@ -82,4 +82,9 @@ urlpatterns = [
         "api/v1/fines/",
          include("fines.urls")
     ),
+
+    path(
+        "api/v1/",
+         include("reviews.urls")
+    ),
 ]

@@ -1,3 +1,4 @@
+from django.db.models import Avg, Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -49,6 +50,10 @@ class BookViewSet(viewsets.ModelViewSet):
             "author",
             "genre",
             "publisher",
+        )
+        .annotate(
+            average_rating_annotated=Avg("reviews__rating"),
+            review_count_annotated=Count("reviews", distinct=True),
         )
         .all()
     )

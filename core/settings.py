@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'reservations',
     'notifications',
     'fines',
+    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -199,3 +200,11 @@ SIMPLE_JWT = {
 
 #Fines setting 
 DAILY_FINE_AMOUNT = config("DAILY_FINE_AMOUNT", default="0.50")  # currency units/day
+
+# If True (default), a user must have at least one Loan record for a book
+# before they're allowed to review it. See reviews/models.py and
+# reviews/services.py for the reasoning. Set to False to allow open
+# reviews from anyone.
+REVIEWS_REQUIRE_LOAN_HISTORY = config(
+    "REVIEWS_REQUIRE_LOAN_HISTORY", default=True, cast=bool
+)
