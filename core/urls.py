@@ -77,4 +77,9 @@ urlpatterns = [
         "api/v1/notifications/",
          include("notifications.urls")
     ),
+
+    path(
+        "api/v1/fines/",
+         include("fines.urls")
+    ),
 ]

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'loans',
     'reservations',
     'notifications',
+    'fines',
 ]
 
 MIDDLEWARE = [
@@ -195,3 +196,6 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
+
+#Fines setting 
+DAILY_FINE_AMOUNT = config("DAILY_FINE_AMOUNT", default="0.50")  # currency units/day

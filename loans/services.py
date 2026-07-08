@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.utils import timezone
  
+from fines.services import FineService
 from notifications.services import NotificationService
 from reservations.services import ReservationService
  
@@ -37,7 +38,7 @@ class LoanService:
     @transaction.atomic
     def return_book(*, loan):
 
-        if loan.status != Loan.Status.ACTIVE:
+        if loan.status not in (Loan.Status.ACTIVE, Loan.Status.OVERDUE):
             raise ValueError("This loan is already closed.")
 
         loan.status = Loan.Status.RETURNED
@@ -58,6 +59,9 @@ class LoanService:
                 "available_copies",
             ]
         )
+
+        # Fix the fine (if any) at today's date now that the loan is closed,
+        FineService.finalize_fine_on_return(loan)
 
         pending_reservations = ReservationService.get_pending_reservations(book=book)
        

@@ -186,3 +186,39 @@ class NotificationService:
             message=message,
             reservation=reservation,
         )
+
+# ------------------------------------------------------------------
+    # Fines
+    # ------------------------------------------------------------------
+    @classmethod
+    def notify_fine_issued(cls, fine) -> Optional[Notification]:
+        """
+        Notifies a member the first time a fine is issued on one of their
+        loans. Idempotent per loan: only ever sends once, even if the
+        fine amount is later recalculated upward while the loan remains
+        overdue (FineService only calls this at creation time, but the
+        idempotency check here is a second line of defense).
+        """
+        already_sent = Notification.objects.filter(
+            loan=fine.loan,
+            notification_type=Notification.NotificationType.FINE_ISSUED,
+        ).exists()
+        if already_sent:
+            return None
+ 
+        subject = "You have a library fine"
+        message = (
+            f"Hi {fine.user.username},\n\n"
+            f'A fine of {fine.amount} has been applied for "{fine.loan.book}", '
+            f"which is {fine.overdue_days} day(s) overdue. "
+            "Please return the book if you haven't already, and settle the "
+            "fine at your earliest convenience.\n\n"
+            "— The Library"
+        )
+        return cls._create_and_send(
+            user=fine.user,
+            notification_type=Notification.NotificationType.FINE_ISSUED,
+            subject=subject,
+            message=message,
+            loan=fine.loan,
+        )
