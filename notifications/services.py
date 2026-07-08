@@ -222,3 +222,26 @@ class NotificationService:
             message=message,
             loan=fine.loan,
         )
+
+    @classmethod
+    def notify_fine_paid(cls, fine) -> Optional[Notification]:
+        """
+        Confirms a successful payment. Not idempotency-guarded like the
+        others — a fine can only be paid once (FineService never calls
+        this against an already-PAID fine), so there's no re-run case
+        to guard against.
+        """
+        subject = "Payment received — library fine settled"
+        message = (
+            f"Hi {fine.user.username},\n\n"
+            f"We've received your payment of {fine.amount} for "
+            f'"{fine.loan.book}". This fine is now marked as paid.\n\n'
+            "— The Library"
+        )
+        return cls._create_and_send(
+            user=fine.user,
+            notification_type=Notification.NotificationType.FINE_PAID,
+            subject=subject,
+            message=message,
+            loan=fine.loan,
+        )

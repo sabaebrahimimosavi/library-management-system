@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Fine
+from .models import Fine, Payment
 
 
 class FineSerializer(serializers.ModelSerializer):
@@ -39,3 +39,19 @@ class FineSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = [
+            "id",
+            "fine",
+            "user",
+            "amount",
+            "method",
+            "status",
+            "provider_reference",
+            "created_at",
+        ]
+        read_only_fields = fields

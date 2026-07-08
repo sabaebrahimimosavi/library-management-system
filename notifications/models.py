@@ -21,6 +21,7 @@ class Notification(models.Model):
         DUE_TODAY_REMINDER = "DUE_TODAY_REMINDER", "Due Today"
         RESERVATION_AVAILABLE = "RESERVATION_AVAILABLE", "Reservation Available"
         FINE_ISSUED = "FINE_ISSUED", "Fine Issued"
+        FINE_PAID = "FINE_PAID", "Fine Paid"
     class Channel(models.TextChoices):
         EMAIL = "EMAIL", "Email"
         SMS = "SMS", "SMS"

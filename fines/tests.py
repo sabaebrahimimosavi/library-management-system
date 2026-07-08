@@ -227,6 +227,47 @@ class FineServiceTests(TestCase):
         self.assertEqual(fine.status, Fine.Status.WAIVED)
         self.assertIsNotNone(fine.waived_at)
 
+    def test_pay_online_success_marks_fine_paid_and_records_payment(self):
+        from .gateway import PaymentDeclined
+        from .models import Payment
+
+        loan = Loan.objects.create(
+            user=self.user,
+            book=self.book,
+            due_date=timezone.localdate() - timedelta(days=1),
+        )
+        fine = FineService.recalculate_fine_for_active_loan(loan)
+
+        payment = FineService.pay_online(
+            fine=fine, user=self.user, card_number="4242424242424242"
+        )
+
+        fine.refresh_from_db()
+        self.assertEqual(fine.status, Fine.Status.PAID)
+        self.assertEqual(payment.status, Payment.Status.SUCCEEDED)
+        self.assertEqual(payment.amount, fine.amount)
+
+    def test_pay_online_decline_raises_and_leaves_fine_unpaid(self):
+        from .gateway import PaymentDeclined
+        from .models import Payment
+
+        loan = Loan.objects.create(
+            user=self.user,
+            book=self.book,
+            due_date=timezone.localdate() - timedelta(days=1),
+        )
+        fine = FineService.recalculate_fine_for_active_loan(loan)
+
+        with self.assertRaises(PaymentDeclined):
+            FineService.pay_online(
+                fine=fine, user=self.user, card_number="4000000000000002"
+            )
+
+        fine.refresh_from_db()
+        self.assertEqual(fine.status, Fine.Status.UNPAID)
+        payment = Payment.objects.get(fine=fine)
+        self.assertEqual(payment.status, Payment.Status.FAILED)
+
 
 @override_settings(DAILY_FINE_AMOUNT="1.00")
 class CalculateFinesCommandTests(TestCase):
@@ -385,10 +426,64 @@ class FineAPITests(APITestCase):
         response = self.client.get(f"/api/v1/fines/{self.other_fine.id}/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_member_cannot_pay_fine(self):
+    def test_member_paying_without_card_number_fails(self):
         self._login(self.member)
         response = self.client.post(f"/api/v1/fines/{self.own_fine.id}/pay/")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.own_fine.refresh_from_db()
+        self.assertEqual(self.own_fine.status, Fine.Status.UNPAID)
+
+    def test_member_can_pay_own_fine_online(self):
+        self._login(self.member)
+        response = self.client.post(
+            f"/api/v1/fines/{self.own_fine.id}/pay/",
+            {"card_number": "4242424242424242"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.own_fine.refresh_from_db()
+        self.assertEqual(self.own_fine.status, Fine.Status.PAID)
+
+        from .models import Payment
+
+        payment = Payment.objects.get(fine=self.own_fine)
+        self.assertEqual(payment.status, Payment.Status.SUCCEEDED)
+        self.assertEqual(payment.user, self.member)
+
+    def test_member_declined_card_leaves_fine_unpaid(self):
+        self._login(self.member)
+        response = self.client.post(
+            f"/api/v1/fines/{self.own_fine.id}/pay/",
+            {"card_number": "4000000000000002"},  # ends in decline suffix
+        )
+        self.assertEqual(response.status_code, status.HTTP_402_PAYMENT_REQUIRED)
+        self.own_fine.refresh_from_db()
+        self.assertEqual(self.own_fine.status, Fine.Status.UNPAID)
+
+        from .models import Payment
+
+        payment = Payment.objects.get(fine=self.own_fine)
+        self.assertEqual(payment.status, Payment.Status.FAILED)
+
+    def test_member_cannot_pay_other_members_fine(self):
+        self._login(self.member)
+        response = self.client.post(
+            f"/api/v1/fines/{self.other_fine.id}/pay/",
+            {"card_number": "4242424242424242"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.other_fine.refresh_from_db()
+        self.assertEqual(self.other_fine.status, Fine.Status.UNPAID)
+
+    def test_member_can_view_own_payment_history(self):
+        self._login(self.member)
+        self.client.post(
+            f"/api/v1/fines/{self.own_fine.id}/pay/",
+            {"card_number": "4242424242424242"},
+        )
+        response = self.client.get(f"/api/v1/fines/{self.own_fine.id}/payments/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["status"], "SUCCEEDED")
 
     def test_admin_can_pay_fine(self):
         self._login(self.admin)
@@ -396,6 +491,11 @@ class FineAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.own_fine.refresh_from_db()
         self.assertEqual(self.own_fine.status, Fine.Status.PAID)
+
+        from .models import Payment
+
+        # Admin manual settlement doesn't go through the gateway.
+        self.assertFalse(Payment.objects.filter(fine=self.own_fine).exists())
 
     def test_admin_can_waive_fine(self):
         self._login(self.admin)

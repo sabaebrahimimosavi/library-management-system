@@ -18,6 +18,11 @@ suggested "the same scheduled job" for overdue-detection and fine
 calculation; this keeps that job for the still-active/overdue case but
 finalizes eagerly on return since that hook point already exists in
 LoanService.
+
+`pay_online` is the member-facing counterpart to the admin-only
+`mark_paid`/`waive` pair below: it goes through the (mock) payment
+gateway and records a Payment attempt row regardless of outcome, so a
+declined card doesn't just disappear.
 """
 
 from decimal import Decimal
@@ -28,7 +33,8 @@ from django.utils import timezone
 
 from notifications.services import NotificationService
 
-from .models import Fine
+from .gateway import MockPaymentGateway, PaymentDeclined
+from .models import Fine, Payment
 
 DEFAULT_DAILY_FINE_AMOUNT = "0.50"
 
@@ -97,6 +103,41 @@ class FineService:
         fine.paid_at = timezone.now()
         fine.save(update_fields=["status", "paid_at", "updated_at"])
         return fine
+
+    @classmethod
+    def pay_online(cls, *, fine, user, card_number):
+        """
+        Member-facing self-service payment, routed through the (mock)
+        payment gateway. Always records a Payment row — SUCCEEDED or
+        FAILED — so a declined attempt leaves an audit trail instead of
+        silently vanishing. Only marks the Fine PAID on success.
+
+        Raises PaymentDeclined if the gateway declines the charge; the
+        Fine is left UNPAID (and can be retried) in that case.
+
+        Callers (the view) are responsible for checking
+        `fine.status == UNPAID` before calling this — this method
+        doesn't re-check, since the view already holds the object via
+        IsOwnerOrAdmin and this shouldn't run at all against a
+        already-settled fine.
+        """
+        result = MockPaymentGateway.charge(amount=fine.amount, card_number=card_number)
+
+        payment = Payment.objects.create(
+            fine=fine,
+            user=user,
+            amount=fine.amount,
+            method=Payment.Method.CARD,
+            status=Payment.Status.SUCCEEDED if result["success"] else Payment.Status.FAILED,
+            provider_reference=result["reference"],
+        )
+
+        if not result["success"]:
+            raise PaymentDeclined("Payment was declined. Please try a different card.")
+
+        cls.mark_paid(fine)
+        NotificationService.notify_fine_paid(fine)
+        return payment
 
     @staticmethod
     def waive(fine):
