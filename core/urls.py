@@ -87,4 +87,9 @@ urlpatterns = [
         "api/v1/",
          include("reviews.urls")
     ),
+
+    path(
+        "api/v1/dashboard/", 
+        include("dashboard.urls")
+    ),
 ]
