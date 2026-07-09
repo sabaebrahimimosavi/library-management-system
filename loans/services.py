@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
  
+from books.models import Book
 from fines.services import FineService
 from notifications.services import NotificationService
 from reservations.services import ReservationService
