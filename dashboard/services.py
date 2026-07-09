@@ -7,7 +7,7 @@ from fines.models import Fine
 from loans.models import Loan
 from reservations.models import Reservation
 
-from django.db.models import Count, Q, Sum, Avg
+from django.db.models import Count, Q, Sum, Avg, F
 
 User = get_user_model()
 
@@ -62,7 +62,11 @@ class DashboardService:
                 average_rating=Avg("reviews__rating"),
                 review_count=Count("reviews"),
             )
-            .order_by("-average_rating", "-review_count")
+            .order_by(
+                F("average_rating").desc(nulls_last=True),
+                 "-review_count",
+                 "title",
+            )
         )
 
     @staticmethod

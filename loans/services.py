@@ -22,6 +22,13 @@ class LoanService:
 
         due_date = timezone.localdate() + timedelta(days=loan_period)
 
+        # Lock row until transaction finishes
+        book = (
+            Book.objects
+            .select_for_update()
+            .get(pk=book.pk)
+        )
+
         if book.available_copies <= 0:
             raise ValueError("Book is not available.")
 
