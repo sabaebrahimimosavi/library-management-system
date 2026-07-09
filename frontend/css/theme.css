@@ -1,0 +1,182 @@
+/* ============================================================
+   Theme: "Card Catalog"
+   A library-specific identity built from index cards, ink
+   stamps, and call-number typography — not a generic template.
+   ============================================================ */
+
+:root {
+  /* Palette */
+  --ink-900: #1b2a4a;      /* deep library-ledger navy */
+  --ink-700: #2c3f66;
+  --ink-500: #4b5f8c;
+  --paper-0: #faf7f0;      /* card stock */
+  --paper-100: #f1ecdf;
+  --paper-200: #e6ddc7;
+  --stamp-red: #7a2e2e;    /* due-date stamp ink */
+  --brass: #b6862c;        /* drawer-pull brass */
+  --leaf-700: #3f6b4d;     /* available / returned */
+  --amber-700: #9c6b18;    /* due soon */
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Bootstrap variable overrides */
+  --bs-primary: var(--ink-900);
+  --bs-primary-rgb: 27, 42, 74;
+  --bs-body-font-family: var(--font-body);
+  --bs-body-color: var(--ink-900);
+  --bs-body-bg: var(--paper-100);
+  --bs-border-radius: 0.25rem;
+  --bs-link-color: var(--ink-900);
+  --bs-link-hover-color: var(--stamp-red);
+}
+
+body {
+  background-color: var(--paper-100);
+  background-image:
+    linear-gradient(rgba(27, 42, 74, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 42, 74, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+h1, h2, h3, h4, .display-heading {
+  font-family: var(--font-display);
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+}
+
+.text-mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
+
+/* ---------- Navbar: drawer label strip ---------- */
+.catalog-nav {
+  background: var(--ink-900);
+  border-bottom: 4px solid var(--brass);
+}
+.catalog-nav .navbar-brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: var(--paper-0) !important;
+  letter-spacing: 0.02em;
+}
+.catalog-nav .nav-link {
+  color: rgba(250, 247, 240, 0.8) !important;
+  font-size: 0.92rem;
+}
+.catalog-nav .nav-link.active,
+.catalog-nav .nav-link:hover {
+  color: var(--paper-0) !important;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background: var(--ink-900);
+  border-color: var(--ink-900);
+}
+.btn-primary:hover, .btn-primary:focus {
+  background: var(--stamp-red);
+  border-color: var(--stamp-red);
+}
+.btn-outline-primary {
+  color: var(--ink-900);
+  border-color: var(--ink-900);
+}
+.btn-outline-primary:hover {
+  background: var(--ink-900);
+  border-color: var(--ink-900);
+}
+.btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* ---------- Index-card book card ---------- */
+.book-card {
+  background: var(--paper-0);
+  border: 1px solid var(--paper-200);
+  border-left: 3px solid var(--ink-900);
+  box-shadow: 2px 2px 0 rgba(27, 42, 74, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  height: 100%;
+}
+.book-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 4px 6px 0 rgba(27, 42, 74, 0.1);
+}
+.book-card .call-number {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-500);
+}
+.book-card .book-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ---------- Ink stamp badges (status) ---------- */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.55rem;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  transform: rotate(-1.5deg);
+}
+.stamp-available { color: var(--leaf-700); }
+.stamp-unavailable { color: var(--stamp-red); }
+.stamp-overdue { color: var(--stamp-red); }
+.stamp-active { color: var(--amber-700); }
+.stamp-returned { color: var(--leaf-700); }
+
+/* ---------- Card-catalog drawer search bar ---------- */
+.drawer-bar {
+  background: var(--ink-900);
+  border-radius: 0.35rem;
+  padding: 1rem;
+}
+.drawer-bar label {
+  color: var(--paper-100);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- Auth "membership card" panel ---------- */
+.membership-card {
+  background: var(--paper-0);
+  border: 1px solid var(--paper-200);
+  border-top: 5px solid var(--brass);
+  box-shadow: 3px 4px 0 rgba(27, 42, 74, 0.08);
+  max-width: 440px;
+}
+
+/* ---------- Star rating ---------- */
+.star-rating .bi-star-fill { color: var(--brass); }
+.star-rating .bi-star { color: var(--paper-200); }
+
+/* ---------- Misc ---------- */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.footer-strip {
+  background: var(--ink-900);
+  color: rgba(250, 247, 240, 0.65);
+  font-size: 0.85rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-card { transition: none; }
+}

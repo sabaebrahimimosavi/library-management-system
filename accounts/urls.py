@@ -8,6 +8,8 @@ from .views import (
     PasswordResetRequestView,
     RegisterView,
     LogoutView,
+    UserListView,
+    UserRoleUpdateView,
 )
 
 urlpatterns = [
@@ -50,5 +52,15 @@ urlpatterns = [
         "change-password/",
         ChangePasswordView.as_view(),
         name="change-password",
+    ),
+    path(
+        "users/",
+        UserListView.as_view(),
+        name="user-list",
+    ),
+    path(
+        "users/<int:pk>/role/",
+        UserRoleUpdateView.as_view(),
+        name="user-role-update",
     ),
 ]

@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
+from accounts.permissions import IsMember
 from books.models import Book
 
 from .models import Reservation
@@ -42,6 +43,14 @@ class ReservationViewSet(
         if user.role == User.Roles.ADMIN:
             return Reservation.objects.all()
         return Reservation.objects.filter(user=user)
+
+    def get_permissions(self):
+        # Reserving and cancelling are member-only transactions — admins
+        # can still view every reservation (list/retrieve), but don't
+        # reserve or cancel on a member's behalf through this endpoint.
+        if self.action in ["create", "cancel"]:
+            return [IsAuthenticated(), IsMember(), IsReservationOwnerOrAdmin()]
+        return [IsAuthenticated(), IsReservationOwnerOrAdmin()]
 
     def create(self, request, *args, **kwargs):
         book = Book.objects.filter(pk=request.data.get("book")).first()

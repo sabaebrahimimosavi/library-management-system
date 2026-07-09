@@ -9,6 +9,8 @@ from rest_framework.response import Response
 
 from books.models import Book
 
+from accounts.permissions import IsMember
+
 from .models import Loan
 
 from .serializers import (
@@ -125,9 +127,24 @@ class LoanViewSet(
 
     def get_permissions(self):
 
+        # Borrowing and returning are member-only transactions — admins
+        # manage the catalog/members and can view every loan, but they
+        # don't act as a stand-in member on these two endpoints.
+        if self.action == "create":
+            return [
+                permissions.IsAuthenticated(),
+                IsMember(),
+            ]
+
+        if self.action == "return_book":
+            return [
+                permissions.IsAuthenticated(),
+                IsMember(),
+                IsLoanOwnerOrAdmin(),
+            ]
+
         if self.action in [
             "retrieve",
-            "return_book",
         ]:
             return [
                 permissions.IsAuthenticated(),

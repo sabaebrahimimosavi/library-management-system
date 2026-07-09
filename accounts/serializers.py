@@ -119,3 +119,32 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "role",
         ]
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the admin-only member list/management endpoints.
+    Read-heavy: role changes go through AdminUserRoleSerializer's
+    dedicated endpoint instead of being PATCH-able here, so the list
+    endpoint stays list-only (no accidental writes from a GET view).
+    """
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "is_active",
+            "date_joined",
+        )
+        read_only_fields = fields
+
+
+class AdminUserRoleSerializer(serializers.Serializer):
+    """POST/PATCH body for /api/v1/auth/users/{id}/role/"""
+
+    role = serializers.ChoiceField(choices=User.Roles.choices)

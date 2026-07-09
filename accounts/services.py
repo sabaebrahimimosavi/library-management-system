@@ -22,7 +22,10 @@ class PasswordResetService:
     def _generate_reset_link(user, frontend_base_url: str) -> str:
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = token_generator.make_token(user)
-        return f"{frontend_base_url}/reset-password/{uidb64}/{token}/"
+        # The frontend uses hash-based routing (createWebHashHistory), so
+        # the link needs a `#` before the route path or Vue Router never
+        # sees it and the SPA just loads its default route.
+        return f"{frontend_base_url}/#/reset-password/{uidb64}/{token}"
 
     @classmethod
     def send_reset_email(cls, email: str, frontend_base_url: str = None) -> None:
