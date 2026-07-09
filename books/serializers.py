@@ -89,11 +89,11 @@ class BookSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
 
-    def get_average_rating(self, obj):
+    def get_average_rating(self, obj) -> float:
         value = getattr(obj, "average_rating_annotated", None)
         return round(float(value), 2) if value is not None else None
 
-    def get_review_count(self, obj):
+    def get_review_count(self, obj) -> int:
         return getattr(obj, "review_count_annotated", 0)
 
     class Meta:

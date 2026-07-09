@@ -34,6 +34,10 @@ class ReservationViewSet(
     permission_classes = [IsAuthenticated, IsReservationOwnerOrAdmin]
 
     def get_queryset(self):
+
+        if getattr(self, "swagger_fake_view", False):
+            return Reservation.objects.none()
+
         user = self.request.user
         if user.role == User.Roles.ADMIN:
             return Reservation.objects.all()

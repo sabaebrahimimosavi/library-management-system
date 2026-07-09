@@ -79,6 +79,7 @@ class BookViewSet(viewsets.ModelViewSet):
         "isbn",
         "author__name",
         "publisher__name",
+        "genre__name",
     ]
 
     ordering_fields = [

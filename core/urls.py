@@ -31,7 +31,10 @@ from drf_spectacular.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    path("api/v1/auth/", include("accounts.urls")),
+    path(
+        "api/v1/auth/", 
+        include("accounts.urls")
+    ),
 
     path(
         "api/v1/auth/login/",
@@ -61,7 +64,10 @@ urlpatterns = [
         name="redoc",
     ),
 
-    path("api/v1/books/", include("books.urls")),
+    path(
+        "api/v1/books/", 
+        include("books.urls")
+    ),
 
     path(
         "api/v1/loans/",

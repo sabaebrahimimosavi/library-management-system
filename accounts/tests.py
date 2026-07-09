@@ -405,3 +405,33 @@ class PermissionTests(TestCase):
                 self._drf_request(user=self.admin), None, FakeObj()
             )
         )
+
+def test_logout_blacklists_refresh_token(self):
+    response = self.client.post(
+        self.login_url,
+        {
+            "username": self.user.username,
+            "password": "TestPassword123!",
+        },
+    )
+
+    refresh = response.data["refresh"]
+    access = response.data["access"]
+
+    self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+
+    response = self.client.post(
+        self.logout_url,
+        {"refresh": refresh},
+        format="json",
+    )
+
+    self.assertEqual(response.status_code, 200)
+
+    refresh_response = self.client.post(
+        self.refresh_url,
+        {"refresh": refresh},
+        format="json",
+    )
+
+    self.assertEqual(refresh_response.status_code, 401)

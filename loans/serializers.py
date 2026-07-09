@@ -39,21 +39,7 @@ class LoanSerializer(serializers.ModelSerializer):
 class BorrowBookSerializer(
     serializers.Serializer
 ):
-
     book = serializers.IntegerField()
-
-    due_date = serializers.DateField()
-
-    def validate_due_date(
-        self,
-        value,
-    ):
-        if value <= date.today():
-            raise serializers.ValidationError(
-                "Due date must be in the future."
-            )
-
-        return value
 
 class ReturnLoanSerializer(
     serializers.Serializer

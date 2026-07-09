@@ -26,6 +26,7 @@ from .permissions import (
 class LoanViewSet(
     viewsets.ModelViewSet
 ):
+    queryset = Loan.objects.all()
 
     serializer_class = LoanSerializer
 
@@ -33,7 +34,16 @@ class LoanViewSet(
         permissions.IsAuthenticated,
     ]
 
+    def get_serializer_class(self):
+        if self.action == "create":
+            return BorrowBookSerializer
+
+        return LoanSerializer
+
     def get_queryset(self):
+
+        if getattr(self, "swagger_fake_view", False):
+            return Loan.objects.none()
 
         user = self.request.user
 
@@ -50,20 +60,10 @@ class LoanViewSet(
             user=user
         )
 
-    def create(
-        self,
-        request,
-        *args,
-        **kwargs
-    ):
+    def create(self, request, *args, **kwargs):
 
-        serializer = BorrowBookSerializer(
-            data=request.data
-        )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         book = get_object_or_404(
             Book,
@@ -71,17 +71,12 @@ class LoanViewSet(
         )
 
         try:
-
             loan = LoanService.borrow_book(
                 user=request.user,
-                book=book,
-                due_date=serializer.validated_data[
-                    "due_date"
-                ],
+                book=book
             )
 
         except ValueError as exc:
-
             return Response(
                 {
                     "detail": str(exc)

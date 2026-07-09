@@ -43,6 +43,10 @@ class FineViewSet(
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def get_queryset(self):
+
+        if getattr(self, "swagger_fake_view", False):
+            return Fine.objects.none()
+
         user = self.request.user
         qs = Fine.objects.select_related("user", "loan", "loan__book")
         if user.role == user.Roles.ADMIN:

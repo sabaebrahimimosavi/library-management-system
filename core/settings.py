@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework',
     'rest_framework_simplejwt',
+    "rest_framework_simplejwt.token_blacklist",
     'drf_spectacular',
     'accounts',
     'books',
@@ -197,6 +198,7 @@ FRONTEND_BASE_URL = config("FRONTEND_BASE_URL", default="http://localhost:3000")
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 #Fines setting 
@@ -209,3 +211,6 @@ DAILY_FINE_AMOUNT = config("DAILY_FINE_AMOUNT", default="0.50")  # currency unit
 REVIEWS_REQUIRE_LOAN_HISTORY = config(
     "REVIEWS_REQUIRE_LOAN_HISTORY", default=True, cast=bool
 )
+
+#loan period
+LOAN_PERIOD_DAYS = 14

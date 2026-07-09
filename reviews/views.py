@@ -33,6 +33,10 @@ class BookReviewListCreateView(generics.ListCreateAPIView):
         return get_object_or_404(Book, pk=self.kwargs["book_id"])
 
     def get_queryset(self):
+
+        if getattr(self, "swagger_fake_view", False):
+            return Review.objects.none()
+
         return (
             Review.objects.filter(book_id=self.kwargs["book_id"])
             .select_related("user", "book")

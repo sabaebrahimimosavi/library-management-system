@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
  
@@ -8,11 +11,16 @@ from reservations.services import ReservationService
 from .models import Loan
 
 
+
 class LoanService:
 
     @staticmethod
     @transaction.atomic
-    def borrow_book(*, user, book, due_date):
+    def borrow_book(*, user, book):
+
+        loan_period = getattr(settings, "LOAN_PERIOD_DAYS", 14)
+
+        due_date = timezone.localdate() + timedelta(days=loan_period)
 
         if book.available_copies <= 0:
             raise ValueError("Book is not available.")
