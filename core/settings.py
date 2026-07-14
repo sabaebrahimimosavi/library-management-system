@@ -224,6 +224,14 @@ REVIEWS_REQUIRE_LOAN_HISTORY = config(
 #loan period
 LOAN_PERIOD_DAYS = 14
 
+#Celery settings
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+
 #for loading book cover image
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

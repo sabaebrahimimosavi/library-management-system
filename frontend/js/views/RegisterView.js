@@ -28,9 +28,16 @@ export default {
               </div>
               <div class="mb-4">
                 <label class="form-label text-mono small" for="password">Password</label>
-                <input id="password" v-model="form.password" type="password" class="form-control"
-                  :class="{ 'is-invalid': fieldErrors.password }" required autocomplete="new-password" />
-                <div class="invalid-feedback">{{ fieldErrors.password?.[0] }}</div>
+                <div class="input-group">
+                  <input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'" class="form-control"
+                    :class="{ 'is-invalid': fieldErrors.password }" required autocomplete="new-password" />
+                  <button type="button" class="btn btn-outline-secondary"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                    @click="showPassword = !showPassword">
+                    <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                  <div class="invalid-feedback">{{ fieldErrors.password?.[0] }}</div>
+                </div>
                 <div class="form-text">At least 8 characters; avoid common passwords.</div>
               </div>
               <button type="submit" class="btn btn-primary w-100" :disabled="submitting">
@@ -55,6 +62,7 @@ export default {
       errorMsg: "",
       successMsg: "",
       fieldErrors: {},
+      showPassword: false,
     };
   },
   methods: {

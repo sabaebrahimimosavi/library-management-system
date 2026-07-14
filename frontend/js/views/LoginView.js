@@ -27,14 +27,21 @@ export default {
               </div>
               <div class="mb-4">
                 <label class="form-label text-mono small" for="password">Password</label>
-                <input
-                  id="password"
-                  v-model="form.password"
-                  type="password"
-                  class="form-control"
-                  autocomplete="current-password"
-                  required
-                />
+                <div class="input-group">
+                  <input
+                    id="password"
+                    v-model="form.password"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="form-control"
+                    autocomplete="current-password"
+                    required
+                  />
+                  <button type="button" class="btn btn-outline-secondary"
+                    :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                    @click="showPassword = !showPassword">
+                    <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  </button>
+                </div>
                 <div class="text-end mt-1">
                   <router-link to="/forgot-password" class="small">Forgot your password?</router-link>
                 </div>
@@ -59,6 +66,7 @@ export default {
       form: { username: "", password: "" },
       submitting: false,
       errorMsg: "",
+      showPassword: false,
     };
   },
   methods: {

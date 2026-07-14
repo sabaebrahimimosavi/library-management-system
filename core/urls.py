@@ -15,7 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
+from django.views.static import serve as static_serve
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -104,3 +105,29 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# ---------------------------------------------------------------------------
+# Serve the frontend (frontend/index.html, css/, js/) from the same Django
+# dev server, so the whole app runs off one port (http://127.0.0.1:8000)
+# instead of a separate `python -m http.server 5500`.
+#
+# Dev-only: this uses Django's built-in static file server, which is not
+# meant for production. In production you'd serve these files via nginx /
+# whitenoise / a CDN instead.
+# ---------------------------------------------------------------------------
+FRONTEND_DIR = settings.BASE_DIR / "frontend"
+
+urlpatterns += [
+    # /css/theme.css, /js/app.js, /js/views/..., etc.
+    re_path(
+        r"^(?P<path>(?:css|js)/.*)$",
+        static_serve,
+        {"document_root": FRONTEND_DIR},
+    ),
+    # Root URL -> frontend/index.html
+    re_path(
+        r"^$",
+        static_serve,
+        {"document_root": FRONTEND_DIR, "path": "index.html"},
+    ),
+]

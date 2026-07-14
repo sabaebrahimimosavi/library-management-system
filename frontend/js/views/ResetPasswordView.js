@@ -22,25 +22,41 @@ export default {
               <form @submit.prevent="handleSubmit" novalidate>
                 <div class="mb-3">
                   <label class="form-label text-mono small" for="new_password">New password</label>
-                  <input
-                    id="new_password"
-                    v-model="newPassword"
-                    type="password"
-                    class="form-control"
-                    autocomplete="new-password"
-                    required
-                  />
+                  <div class="input-group">
+                    <input
+                      id="new_password"
+                      v-model="newPassword"
+                      :type="showNewPassword ? 'text' : 'password'"
+                      class="form-control"
+                      :class="{ 'is-invalid': fieldErrors.new_password }"
+                      autocomplete="new-password"
+                      required
+                    />
+                    <button type="button" class="btn btn-outline-secondary"
+                      :aria-label="showNewPassword ? 'Hide password' : 'Show password'"
+                      @click="showNewPassword = !showNewPassword">
+                      <i class="bi" :class="showNewPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                    <div class="invalid-feedback">{{ fieldErrors.new_password?.[0] }}</div>
+                  </div>
                 </div>
                 <div class="mb-4">
                   <label class="form-label text-mono small" for="confirm_password">Confirm new password</label>
-                  <input
-                    id="confirm_password"
-                    v-model="confirmPassword"
-                    type="password"
-                    class="form-control"
-                    autocomplete="new-password"
-                    required
-                  />
+                  <div class="input-group">
+                    <input
+                      id="confirm_password"
+                      v-model="confirmPassword"
+                      :type="showConfirmPassword ? 'text' : 'password'"
+                      class="form-control"
+                      autocomplete="new-password"
+                      required
+                    />
+                    <button type="button" class="btn btn-outline-secondary"
+                      :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+                      @click="showConfirmPassword = !showConfirmPassword">
+                      <i class="bi" :class="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                  </div>
                   <div class="form-text" v-if="confirmPassword && confirmPassword !== newPassword">
                     Passwords don't match yet.
                   </div>
@@ -68,11 +84,15 @@ export default {
       submitting: false,
       done: false,
       errorMsg: "",
+      fieldErrors: {},
+      showNewPassword: false,
+      showConfirmPassword: false,
     };
   },
   methods: {
     async handleSubmit() {
       this.errorMsg = "";
+      this.fieldErrors = {};
       this.submitting = true;
       try {
         await auth.confirmPasswordReset({
@@ -82,10 +102,20 @@ export default {
         });
         this.done = true;
       } catch (err) {
-        this.errorMsg =
-          err instanceof ApiError
-            ? err.detail || "This reset link is invalid or has expired."
-            : "Could not reach the server. Is the backend running?";
+        if (err instanceof ApiError && err.status === 400 && Object.keys(err.fields).length) {
+          // Field-level validation errors (e.g. password too common/short)
+          // — show the specific reason instead of a generic message.
+          this.fieldErrors = err.fields;
+          this.errorMsg =
+            err.fields.new_password?.[0] ||
+            err.fields.token?.[0] ||
+            err.fields.uidb64?.[0] ||
+            "Please fix the highlighted field.";
+        } else if (err instanceof ApiError) {
+          this.errorMsg = err.detail || "This reset link is invalid or has expired.";
+        } else {
+          this.errorMsg = "Could not reach the server. Is the backend running?";
+        }
       } finally {
         this.submitting = false;
       }
