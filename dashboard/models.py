@@ -1,3 +1,3 @@
 from django.db import models
 
-# Create your models here.
+#This is intentionally empty because dashboard values are calculated live from existing tables.

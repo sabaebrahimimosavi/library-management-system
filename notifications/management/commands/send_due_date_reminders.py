@@ -1,8 +1,5 @@
 """
-notifications/management/commands/send_due_date_reminders.py
-
-Intended to run once per day (via cron, celery-beat, or a scheduled task
-runner). Idempotent: safe to re-run the same day without double-sending,
+Intended to run once per day. Idempotent: safe to re-run the same day without double-sending,
 since NotificationService checks for an existing notification per loan
 per reminder type before sending.
 

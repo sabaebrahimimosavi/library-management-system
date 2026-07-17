@@ -1,7 +1,5 @@
 """
-notifications/views.py
-
-Views stay thin: queryset scoping and a single state change (mark as
+queryset scoping and a single state change (mark as
 read), nothing else. Notification creation happens exclusively through
 NotificationService, never through this API.
 """

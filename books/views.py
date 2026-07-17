@@ -4,7 +4,7 @@ from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import filters
 from accounts.permissions import IsAdminOrReadOnly
-from .pagination import BookPagination
+from .pagination import BookPagination, LookupPagination
 
 from .models import (
     Author,
@@ -24,6 +24,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = LookupPagination
 
     search_fields = ["name"]
     filter_backends = [SearchFilter]
@@ -32,6 +33,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = LookupPagination
 
     search_fields = ["name"]
     filter_backends = [SearchFilter]
@@ -40,6 +42,7 @@ class PublisherViewSet(viewsets.ModelViewSet):
     queryset = Publisher.objects.all()
     serializer_class = PublisherSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = LookupPagination
 
     search_fields = ["name"]
     filter_backends = [SearchFilter]

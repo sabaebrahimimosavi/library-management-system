@@ -1,6 +1,4 @@
 """
-Mock payment gateway for fine payments.
-
 Stands in for a real provider (Stripe, PayPal, etc.) until one is wired
 in. Swapping to a real gateway later should only require rewriting
 `MockPaymentGateway.charge()` — nothing in FineService or the views

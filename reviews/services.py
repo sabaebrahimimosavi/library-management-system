@@ -1,8 +1,5 @@
 """
-ReviewService is intentionally small: reviews don't have the
-multi-state lifecycle fines/reservations have (no PENDING/SETTLED
-transitions), just create-with-validation and in-place update. The two
-checks in create_review are the only real business rules:
+The two checks in create_review are the only real business rules:
 
   1. one review per (user, book) — checked here (not left to the DB
      constraint alone) so a duplicate attempt returns a clean 400 with

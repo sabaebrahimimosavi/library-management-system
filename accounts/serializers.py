@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
@@ -89,7 +90,10 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        style={"input_type": "password"},
+    )
 
     class Meta:
         model = User
@@ -99,14 +103,32 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password",
         ]
 
+    def validate(self, attrs):
+        candidate_user = User(
+            username=attrs.get("username", ""),
+            email=attrs.get("email", ""),
+        )
+
+        try:
+            validate_password(
+                attrs["password"],
+                user=candidate_user,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(
+                {
+                    "password": list(exc.messages)
+                }
+            ) from exc
+
+        return attrs
+
     def create(self, validated_data):
-        user = User.objects.create_user(
+        return User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"],
             password=validated_data["password"],
         )
-
-        return user
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -96,15 +96,6 @@ urlpatterns = [
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# ---------------------------------------------------------------------------
-# Serve the frontend (frontend/index.html, css/, js/) from the same Django
-# dev server, so the whole app runs off one port (http://127.0.0.1:8000)
-# instead of a separate `python -m http.server 5500`.
-#
-# Dev-only: this uses Django's built-in static file server, which is not
-# meant for production. In production you'd serve these files via nginx /
-# whitenoise / a CDN instead.
-# ---------------------------------------------------------------------------
 FRONTEND_DIR = settings.BASE_DIR / "frontend"
 
 urlpatterns += [

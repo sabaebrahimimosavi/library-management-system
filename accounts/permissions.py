@@ -55,7 +55,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     object (via a `user` or `owner` attribute on the model instance) or if
     the requesting user is an administrator.
 
-    Useful for future apps (loans, reservations, reviews, payments) where
+    Useful for apps (loans, reservations, reviews, payments) where
     members should only see/modify their own records.
     """
 

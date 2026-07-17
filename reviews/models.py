@@ -1,8 +1,4 @@
 """
-Design decisions (Phase 6 was handed over with these as open questions —
-resolving them here, documented the same way fines/models.py documents
-its own calls):
-
 1. One Review per (user, book) — UniqueConstraint, same pattern already
    used by reservations/loans for "one pending reservation per
    user+book". Editing is done via PATCH on the existing row, not by

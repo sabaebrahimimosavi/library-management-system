@@ -62,8 +62,8 @@ The project uses Django and Django REST Framework for the backend, PostgreSQL fo
 
 - Overdue fines are calculated from the number of overdue days
 - One fine is maintained per loan and recalculated while the loan remains overdue
-- Fine amounts are finalized when the book is returned
 - Members can view and pay their own fines
+- When fine is paied, The book will be returned automatically 
 - Administrators can view all fines and waive unpaid fines
 - Payment attempts are stored for audit history
 
@@ -181,7 +181,7 @@ The project has primarily been developed on Windows, but it can also run on Linu
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone <REPOSITORY_URL>
 cd library_management
 ```
 
@@ -513,123 +513,6 @@ Main API groups include:
 ```
 
 Consult Swagger or ReDoc for current request fields and endpoint details.
-
----
-
-## Git and media files
-
-Runtime media files should normally not be committed to Git. Add the following to `.gitignore`:
-
-```gitignore
-.env
-/venv/
-/.venv/
-/media/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.idea/
-.vscode/
-```
-
-If `media/` was previously committed, remove it from Git tracking without deleting the local files:
-
-```bash
-git rm -r --cached --ignore-unmatch media
-```
-
-Then commit the `.gitignore` change.
-
-For deployment, store media files on persistent storage, object storage, or a mounted volume. A fresh clone will not contain local cover images when `media/` is ignored.
-
----
-
-## Troubleshooting
-
-### Blank frontend page
-
-Open the browser developer tools and inspect the Console:
-
-```text
-F12 → Console
-```
-
-Check edited JavaScript files when a syntax error is reported. Then perform a hard refresh:
-
-```text
-Ctrl + Shift + R
-```
-
-A `304` response in the Django terminal is normal and means the browser used a cached file.
-
-### Missing favicon
-
-A message such as this is harmless:
-
-```text
-Not Found: /favicon.ico
-```
-
-It only means a browser-tab icon has not been configured.
-
-### Cover exists on disk but is not shown
-
-Confirm both conditions:
-
-1. The file exists under `media/books/covers/`.
-2. The book’s `cover_image` database field points to that file.
-
-Run:
-
-```bash
-python manage.py link_existing_covers --dry-run
-python manage.py link_existing_covers --overwrite
-```
-
-### PostgreSQL connection failure
-
-Check:
-
-- PostgreSQL is running
-- The database exists
-- `.env` credentials are correct
-- `DB_HOST` and `DB_PORT` are correct
-
-### Email is not sent
-
-Check:
-
-- `EMAIL_ADDRESS` is correct
-- `EMAIL_PASSWORD` is a Gmail App Password
-- SMTP access is not blocked by the network
-- The recipient account has a valid email address
-
-### Django Admin opens under the wrong browser identity
-
-The frontend uses JWT authentication, while Django Admin uses a session cookie. The project’s integrated login logic should synchronize or clear the Django session based on the library user’s role. Use the same hostname for both the frontend and Django Admin.
-
----
-
-## Production notes
-
-Before deploying:
-
-- Set `DEBUG=False`
-- Use a strong, private `SECRET_KEY`
-- Configure `ALLOWED_HOSTS`
-- Use HTTPS
-- Serve static files with a production static-file solution
-- Serve media files from persistent storage
-- Configure strict CORS and CSRF policies
-- Use secure cookies
-- Use a production WSGI or ASGI server
-- Use Redis and Celery for scheduled jobs
-- Replace the mock payment gateway with a real provider
-- Store all secrets in environment variables
-- Configure database backups
-- Review email limits and delivery reliability
-
-Django’s development server and built-in static/media serving are not intended for production.
 
 ---
 

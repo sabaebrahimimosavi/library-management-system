@@ -11,14 +11,6 @@ the same private upsert logic:
   NOT yet returned. Uses today's date, so the fine keeps growing each
   day the book stays out.
 
-This two-entry-point split (rather than a single always-run-daily job)
-means a fine is correct immediately on return instead of waiting for the
-next day's cron/scheduled run — worth noting since the handover doc
-suggested "the same scheduled job" for overdue-detection and fine
-calculation; this keeps that job for the still-active/overdue case but
-finalizes eagerly on return since that hook point already exists in
-LoanService.
-
 `pay_online` is the member-facing counterpart to the admin-only
 `mark_paid`/`waive` pair below: it goes through the (mock) payment
 gateway and records a Payment attempt row regardless of outcome, so a

@@ -39,6 +39,22 @@ token_generator = PasswordResetTokenGenerator()
 # Model tests
 # ---------------------------------------------------------------------------
 class UserModelTests(TestCase):
+    def test_register_rejects_weak_password(self):
+        response = self.client.post(
+            self.register_url,
+            {
+                "username": "weakuser",
+                "email": "weak@example.com",
+                "password": "123",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertIn("password", response.data)
+
     def test_create_user_defaults_to_member_role(self):
         user = User.objects.create_user(
             username="alice", email="alice@example.com", password="StrongPass123!"

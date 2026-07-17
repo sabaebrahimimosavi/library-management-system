@@ -1,8 +1,6 @@
 from django.shortcuts import get_object_or_404
 
-from rest_framework import status
-from rest_framework import permissions
-from rest_framework import viewsets
+from rest_framework import mixins, permissions, status, viewsets
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -26,15 +24,21 @@ from .permissions import (
 
 
 class LoanViewSet(
-    viewsets.ModelViewSet
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = Loan.objects.all()
 
     serializer_class = LoanSerializer
 
+    filterset_fields = ["status"]
+
     permission_classes = [
         permissions.IsAuthenticated,
     ]
+
 
     def get_serializer_class(self):
         if self.action == "create":

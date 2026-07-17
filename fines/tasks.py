@@ -1,6 +1,4 @@
 """
-Celery task replacing the manual `python manage.py calculate_fines`
-command. Same logic, just triggered by Celery Beat instead of a human
 (see core/celery.py's beat_schedule for the "daily at 01:00" trigger).
 
 The management command at fines/management/commands/calculate_fines.py

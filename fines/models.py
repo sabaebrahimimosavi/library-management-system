@@ -5,8 +5,7 @@ the same row while the loan is still out, and freezes it the moment the
 loan is returned or the fine is paid/waived. The handover doc's
 "Fine model: loan (FK)..." doesn't specify uniqueness explicitly — this
 picks the simpler of the two reasonable designs (one evolving record vs.
-a per-day ledger) since nothing in Phase 5's requirements needs a
-historical ledger of daily fine increments, only the current total.
+a per-day ledger).
 """
 
 from django.conf import settings

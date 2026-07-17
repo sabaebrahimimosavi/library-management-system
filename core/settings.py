@@ -224,7 +224,7 @@ REVIEWS_REQUIRE_LOAN_HISTORY = config(
 )
 
 #loan period
-LOAN_PERIOD_DAYS = 14
+LOAN_PERIOD_DAYS = 30
 
 #Celery settings
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")

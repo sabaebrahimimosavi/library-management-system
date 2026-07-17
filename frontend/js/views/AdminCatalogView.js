@@ -339,9 +339,9 @@ export default {
     async fetchLookups() {
       try {
         const [a, g, p] = await Promise.all([
-          books.authors({ page_size: 200 }),
-          books.genres({ page_size: 200 }),
-          books.publishers({ page_size: 200 }),
+          books.authors({ page_size: 1000 }),
+          books.genres({ page_size: 1000 }),
+          books.publishers({ page_size: 1000 }),
         ]);
         this.authors = a.results ?? a;
         this.genres = g.results ?? g;
@@ -395,7 +395,8 @@ export default {
       if (this.coverFile) {
         const fd = new FormData();
         Object.entries(this.bookForm).forEach(([k, v]) => {
-          if (k === "id" || v === null || v === undefined || (key === "pages" && value === "")) return;
+          if (k === "id" || v === null || v === undefined) return;
+
           fd.append(k, v);
         });
         fd.append("cover_image", this.coverFile);
@@ -457,7 +458,7 @@ export default {
       this.simpleLoading[res] = true;
       try {
         const fetcher = { authors: books.authors, genres: books.genres, publishers: books.publishers }[res];
-        const data = await fetcher({ page_size: 200 });
+        const data = await fetcher({ page_size: 1000 });
         this.simpleLists[res] = data.results ?? data;
       } catch (err) {
         this.flash(false, err instanceof ApiError ? err.detail : `Could not load ${res}.`);

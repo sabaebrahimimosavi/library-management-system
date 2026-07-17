@@ -19,7 +19,7 @@ class LoanService:
     @transaction.atomic
     def borrow_book(*, user, book):
 
-        loan_period = getattr(settings, "LOAN_PERIOD_DAYS", 14)
+        loan_period = getattr(settings, "LOAN_PERIOD_DAYS", 30)
 
         due_date = timezone.localdate() + timedelta(days=loan_period)
 

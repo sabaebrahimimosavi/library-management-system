@@ -30,7 +30,7 @@ export default {
       <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
 
       <div v-else>
-        <div v-if="filteredResults.length === 0" class="text-center py-5">
+        <div v-if="results.length === 0" class="text-center py-5">
           <p class="fs-5">No loans match that filter.</p>
           <router-link to="/books" class="btn btn-primary mt-2">Browse the catalog</router-link>
         </div>
@@ -48,7 +48,7 @@ export default {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="loan in filteredResults" :key="loan.id">
+              <tr v-for="loan in results" :key="loan.id">
                 <td>
                   <router-link :to="'/books/' + loan.book">{{ loan.book_title }}</router-link>
                 </td>
@@ -105,14 +105,6 @@ export default {
     totalPages() {
       return Math.max(1, Math.ceil(this.count / this.pageSize));
     },
-    // NOTE: LoanViewSet doesn't define filterset_fields on the backend,
-    // so a `?status=` query param is silently ignored there. Filtering
-    // client-side over the current page instead — ask a backend dev to
-    // add `filterset_fields = ["status"]` to LoanViewSet for a real fix.
-    filteredResults() {
-      if (!this.statusFilter) return this.results;
-      return this.results.filter((l) => l.status === this.statusFilter);
-    },
   },
   async created() {
     await this.fetchLoans();
@@ -128,8 +120,8 @@ export default {
       return "stamp-active";
     },
     onFilterChange() {
-      // Client-side filter only (see filteredResults note above) — no
-      // refetch needed, it just changes what's shown on this page.
+      this.page = 1;
+      this.fetchLoans();
     },
     goToPage(p) {
       if (p < 1 || p > this.totalPages) return;
@@ -141,7 +133,15 @@ export default {
       this.loading = true;
       this.error = "";
       try {
-        const data = await loans.mine({ page: this.page });
+        const params = {
+          page: this.page,
+        };
+
+        if (this.statusFilter) {
+          params.status = this.statusFilter;
+        }
+
+        const data = await loans.mine(params);
         this.results = data.results ?? data;
         this.count = data.count ?? this.results.length;
       } catch (err) {

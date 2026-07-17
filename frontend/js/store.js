@@ -1,6 +1,6 @@
 // js/store.js
 // Small hand-rolled auth store using Vue's reactivity, shared by every
-// component that imports it. No Vuex/Pinia needed at this scale.
+// component that imports it.
 
 const { reactive } = Vue;
 
