@@ -55,6 +55,12 @@ class Book(models.Model):
     copies = models.PositiveIntegerField(default=0)
     available_copies = models.PositiveIntegerField(default=0)
 
+    pages = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Total page count. Optional — not all books have this recorded.",
+    )
+
     author = models.ForeignKey(
         Author,
         on_delete=models.PROTECT,

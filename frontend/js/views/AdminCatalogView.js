@@ -8,6 +8,7 @@ const emptyBookForm = () => ({
   description: "",
   copies: 1,
   available_copies: 1,
+  pages: null,
   author: "",
   genre: "",
   publisher: "",
@@ -43,10 +44,23 @@ export default {
           </div>
           <form @submit.prevent="saveBook">
             <div class="row g-2 mb-2">
-              <div class="col-12 col-md-6">
-                <label class="form-label text-mono small">Title</label>
-                <input v-model="bookForm.title" class="form-control" :class="{ 'is-invalid': bookFieldErrors.title }" required />
-                <div class="invalid-feedback">{{ bookFieldErrors.title?.[0] }}</div>
+              <div class="col-6 col-md-3">
+                <label class="form-label text-mono small">
+                  Pages
+                </label>
+
+                <input
+                  v-model.number="bookForm.pages"
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  :class="{ 'is-invalid': bookFieldErrors.pages }"
+                  placeholder="Optional"
+                />
+
+                <div class="invalid-feedback">
+                  {{ bookFieldErrors.pages?.[0] }}
+                </div>
               </div>
               <div class="col-6 col-md-3">
                 <label class="form-label text-mono small">ISBN</label>
@@ -265,7 +279,7 @@ export default {
       bookList: [],
       bookCount: 0,
       bookPage: 1,
-      bookPageSize: 10,
+      bookPageSize: 20,
       loadingBooks: true,
       bookForm: null,
       bookFieldErrors: {},
@@ -356,6 +370,7 @@ export default {
         description: b.description || "",
         copies: b.copies,
         available_copies: b.available_copies,
+        pages: b.pages,
         author: b.author,
         genre: b.genre,
         publisher: b.publisher,
@@ -380,14 +395,21 @@ export default {
       if (this.coverFile) {
         const fd = new FormData();
         Object.entries(this.bookForm).forEach(([k, v]) => {
-          if (k === "id" || v === null || v === undefined) return;
+          if (k === "id" || v === null || v === undefined || (key === "pages" && value === "")) return;
           fd.append(k, v);
         });
         fd.append("cover_image", this.coverFile);
         return fd;
       }
       const { id, ...rest } = this.bookForm;
-      return rest;
+      return {
+      ...rest,
+      pages:
+        rest.pages === "" ||
+        rest.pages === undefined
+          ? null
+          : rest.pages,
+    };
     },
     async saveBook() {
       this.savingBook = true;

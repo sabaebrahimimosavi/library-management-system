@@ -43,3 +43,6 @@ dist/
 
 # PostgreSQL dump files
 *.sql
+
+#medias
+/media/

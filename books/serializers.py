@@ -8,6 +8,7 @@ from .models import (
 )
 
 
+
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
@@ -107,6 +108,7 @@ class BookSerializer(serializers.ModelSerializer):
             "cover_image",
             "copies",
             "available_copies",
+            "pages",
             "author",
             "genre",
             "publisher",

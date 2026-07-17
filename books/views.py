@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import filters
 from accounts.permissions import IsAdminOrReadOnly
+from .pagination import BookPagination
 
 from .models import (
     Author,
@@ -60,6 +61,7 @@ class BookViewSet(viewsets.ModelViewSet):
 
     serializer_class = BookSerializer
     permission_classes = [IsAdminOrReadOnly]
+    pagination_class = BookPagination
 
     filter_backends = [
         DjangoFilterBackend,

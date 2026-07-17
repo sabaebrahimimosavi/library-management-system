@@ -32,6 +32,7 @@ class BookAdmin(admin.ModelAdmin):
         "id",
         "title",
         "isbn",
+        "pages",
         "copies",
         "available_copies",
     )

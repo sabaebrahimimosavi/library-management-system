@@ -5,12 +5,24 @@ export default {
   name: "BookDetailView",
   template: /* html */ `
     <div class="container pb-5" v-if="book">
-      <router-link to="/books" class="small text-mono d-inline-block mb-3">&larr; Back to catalog</router-link>
-
+      <router-link
+        :to="backTo"
+        class="small text-mono d-inline-block mb-3"
+      >
+        &larr; Back
+      </router-link>
       <div class="row g-4">
         <div class="col-12 col-lg-8">
           <img v-if="book.cover_image" :src="book.cover_image" class="rounded mb-3" style="max-height:280px;object-fit:cover" />
-          <p class="call-number mb-1">ISBN {{ book.isbn }} &middot; {{ book.publication_year }}</p>
+          <p class="call-number mb-1">
+            ISBN {{ book.isbn }}
+            &middot;
+            {{ book.publication_year }}
+
+            <span v-if="book.pages">
+              &middot; {{ book.pages }} pages
+            </span>
+          </p>          
           <h1 class="display-heading">{{ book.title }}</h1>
           <p class="fs-5 text-muted mb-3">by {{ book.author_name }}</p>
 
@@ -107,8 +119,8 @@ export default {
 
     <div v-else class="container py-5 text-center">
       <p class="fs-5">This title isn't in the catalog.</p>
-      <router-link to="/books">Back to catalog</router-link>
-    </div>
+      <router-link :to="backTo">Back</router-link>
+      </div>
   `,
   data() {
     return {
@@ -123,14 +135,43 @@ export default {
       actionSuccess: "",
     };
   },
-  computed: {
-    store() {
-      return store;
-    },
-    myReview() {
-      return this.reviewList.find((r) => r.username === store.user?.username) || null;
-    },
+computed: {
+  store() {
+    return store;
   },
+
+  myReview() {
+    return (
+      this.reviewList.find(
+        (review) =>
+          review.username === store.user?.username
+      ) || null
+    );
+  },
+
+  backTo() {
+    const from = this.$route.query.from;
+
+    if (typeof from !== "string") {
+      return "/books";
+    }
+
+    const allowedPrefixes = [
+      "/books",
+      "/admin",
+      "/loans",
+      "/reservations",
+      "/fines",
+      "/notifications",
+    ];
+
+    const isAllowed = allowedPrefixes.some(
+      (prefix) => from.startsWith(prefix)
+    );
+
+    return isAllowed ? from : "/books";
+  },
+},
   async created() {
     await this.loadBook();
   },
