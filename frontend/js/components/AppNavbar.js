@@ -38,12 +38,55 @@ export default {
                 Admin
               </a>
               <ul class="dropdown-menu">
-                <li><router-link class="dropdown-item" to="/admin">Dashboard</router-link></li>
-                <li><router-link class="dropdown-item" to="/admin/catalog">Catalog manager</router-link></li>
-                <li><router-link class="dropdown-item" to="/admin/members">Members</router-link></li>
-                <li><router-link class="dropdown-item" to="/loans">All loans</router-link></li>
-                <li><router-link class="dropdown-item" to="/reservations">All reservations</router-link></li>
-                <li><router-link class="dropdown-item" to="/fines">All fines</router-link></li>
+                <li>
+                  <router-link class="dropdown-item" to="/admin">
+                    Dashboard
+                  </router-link>
+                </li>
+
+                <li>
+                  <router-link class="dropdown-item" to="/admin/catalog">
+                    Catalog manager
+                  </router-link>
+                </li>
+
+                <li>
+                  <router-link class="dropdown-item" to="/admin/members">
+                    Members
+                  </router-link>
+                </li>
+
+                <li>
+                  <router-link class="dropdown-item" to="/loans">
+                    All loans
+                  </router-link>
+                </li>
+
+                <li>
+                  <router-link class="dropdown-item" to="/reservations">
+                    All reservations
+                  </router-link>
+                </li>
+
+                <li>
+                  <router-link class="dropdown-item" to="/fines">
+                    All fines
+                  </router-link>
+                </li>
+
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="/django-admin/"
+                  >
+                    <i class="bi bi-shield-lock me-1"></i>
+                    Django Admin
+                  </a>
+                </li>
               </ul>
             </li>
           </ul>

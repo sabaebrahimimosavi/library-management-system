@@ -1,4 +1,5 @@
 import { store } from "./store.js";
+import { auth } from "./api.js";
 import LoginView from "./views/LoginView.js";
 import RegisterView from "./views/RegisterView.js";
 import ForgotPasswordView from "./views/ForgotPasswordView.js";
@@ -48,15 +49,48 @@ export const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
-  if (to.meta.requiresAuth && !store.isAuthenticated) {
-    return { path: "/login", query: { redirect: to.fullPath } };
+router.beforeEach(async (to) => {
+  if (
+    to.meta.requiresAuth &&
+    !store.isAuthenticated
+  ) {
+    return {
+      path: "/login",
+      query: {
+        redirect: to.fullPath,
+      },
+    };
   }
-  if (to.meta.guestOnly && store.isAuthenticated) {
-    return { path: "/books" };
+
+  if (to.meta.guestOnly) {
+    if (store.isAuthenticated) {
+      return {
+        path: "/books",
+      };
+    }
+
+    /*
+     * A guest page means there should not be
+     * an active Django administrator session.
+     */
+    try {
+      await auth.clearAdminSession();
+    } catch (error) {
+      console.warn(
+        "Could not clear the Django Admin session:",
+        error
+      );
+    }
   }
-  if (to.meta.adminOnly && !store.isAdmin) {
-    return { path: "/books" };
+
+  if (
+    to.meta.adminOnly &&
+    !store.isAdmin
+  ) {
+    return {
+      path: "/books",
+    };
   }
+
   return true;
 });

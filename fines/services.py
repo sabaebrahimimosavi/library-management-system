@@ -97,11 +97,27 @@ class FineService:
         reference_date = (loan.returned_at or timezone.now()).date()
         return cls._upsert_fine(loan=loan, reference_date=reference_date)
 
-    @staticmethod
-    def mark_paid(fine):
+    @classmethod
+    @transaction.atomic
+    def mark_paid(cls, fine):
         fine.status = Fine.Status.PAID
         fine.paid_at = timezone.now()
         fine.save(update_fields=["status", "paid_at", "updated_at"])
+
+        # A fine can exist for a loan that's still ACTIVE/OVERDUE (the daily
+        # calculate_fines job fines loans before they're returned). If the
+        # member pays it off before physically returning the book, treat
+        # the payment as closing the loan out too — otherwise the loan
+        # would stay open forever with no way to reconcile it.
+        loan = fine.loan
+        if loan.status != loan.Status.RETURNED:
+            # Local import: loans.services already imports fines.services
+            # at module level, so importing LoanService up top here would
+            # be a circular import.
+            from loans.services import LoanService
+
+            LoanService.return_book(loan=loan)
+
         return fine
 
     @classmethod

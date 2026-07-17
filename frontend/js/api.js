@@ -109,6 +109,14 @@ function qs(params = {}) {
 export const auth = {
   register: (payload) => apiFetch("/auth/register/", { method: "POST", body: payload, auth: false }),
   login: (payload) => apiFetch("/auth/login/", { method: "POST", body: payload, auth: false }),
+  clearAdminSession: () =>
+    apiFetch(
+      "/auth/clear-admin-session/",
+      {
+        method: "POST",
+        auth: false,
+      }
+    ),
   me: () => apiFetch("/auth/me/"),
   updateMe: (payload) => apiFetch("/auth/me/", { method: "PATCH", body: payload }),
   logout: (refresh) => apiFetch("/auth/logout/", { method: "POST", body: { refresh } }),

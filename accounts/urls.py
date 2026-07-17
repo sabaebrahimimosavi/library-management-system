@@ -1,13 +1,17 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+)
 
 from .views import (
     ChangePasswordView,
+    ClearAdminSessionView,
+    LibraryLoginView,
+    LogoutView,
     MeView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
     RegisterView,
-    LogoutView,
     UserListView,
     UserRoleUpdateView,
 )
@@ -20,8 +24,13 @@ urlpatterns = [
     ),
     path(
         "login/",
-         TokenObtainPairView.as_view(),
-          name="login"
+        LibraryLoginView.as_view(),
+        name="login",
+    ),
+    path(
+        "clear-admin-session/",
+        ClearAdminSessionView.as_view(),
+        name="clear-admin-session",
     ),
     path(
         "logout/",

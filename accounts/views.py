@@ -2,6 +2,15 @@ from django.db.models import Q
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
+from django.contrib.auth import (
+    login as django_login,
+    logout as django_logout,
+)
+
+from rest_framework.views import APIView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+)
 
 from .models import User
 from .permissions import IsAdmin
@@ -17,6 +26,93 @@ from .serializers import (
 )
 from .services import PasswordResetService
 
+
+class LibraryLoginView(TokenObtainPairView):
+    """
+    Log the user into the frontend using JWT.
+
+    Administrators also receive a Django session so
+    they can enter /django-admin/ without logging in again.
+
+    A member login removes any previous Django admin session.
+    """
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        user = serializer.user
+        django_request = request._request
+
+        is_library_admin = (
+            user.role == User.Roles.ADMIN
+            or user.is_superuser
+        )
+
+        if is_library_admin:
+            update_fields = []
+
+            if not user.is_staff:
+                user.is_staff = True
+                update_fields.append("is_staff")
+
+            # Keep superusers consistent with the
+            # frontend role system.
+            if (
+                user.is_superuser
+                and user.role != User.Roles.ADMIN
+            ):
+                user.role = User.Roles.ADMIN
+                update_fields.append("role")
+
+            if update_fields:
+                user.save(
+                    update_fields=update_fields
+                )
+
+            django_login(
+                django_request,
+                user,
+                backend=(
+                    "django.contrib.auth.backends."
+                    "ModelBackend"
+                ),
+            )
+
+        else:
+            # Remove a previous administrator session
+            # when someone logs in as a member.
+            django_logout(django_request)
+
+        return Response(
+            serializer.validated_data,
+            status=status.HTTP_200_OK,
+        )
+
+class ClearAdminSessionView(APIView):
+    """
+    Clear an old Django admin session.
+
+    Used when the frontend enters a guest-only page,
+    such as login, register, or forgot password.
+    """
+
+    authentication_classes = []
+    permission_classes = [
+        permissions.AllowAny
+    ]
+
+    def post(self, request, *args, **kwargs):
+        django_logout(request._request)
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 class MeView(generics.RetrieveUpdateAPIView):
     """
@@ -132,15 +228,49 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
         serializer.save()
 
+        # Also remove the Django Admin session.
+        django_logout(request._request)
+
         return Response(
-            {"detail": "Logged out successfully."},
+            {
+                "detail": (
+                    "Logged out successfully."
+                )
+            },
             status=status.HTTP_200_OK,
         )
 
+class MemberLoginView(TokenObtainPairView):
+    """
+    JWT login for the main application.
+
+    After a successful login, clear any existing
+    Django Admin session in the same browser.
+    """
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(
+            request,
+            *args,
+            **kwargs,
+        )
+
+        if response.status_code == status.HTTP_200_OK:
+            # request is a DRF Request, so use the
+            # original Django HttpRequest.
+            django_logout(request._request)
+
+        return response
 
 class UserListView(generics.ListAPIView):
     """
@@ -202,7 +332,20 @@ class UserRoleUpdateView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        target.role = serializer.validated_data["role"]
-        target.save(update_fields=["role"])
+        new_role = serializer.validated_data[
+            "role"
+        ]
+
+        target.role = new_role
+        target.is_staff = (
+            new_role == User.Roles.ADMIN
+        )
+
+        target.save(
+            update_fields=[
+                "role",
+                "is_staff",
+            ]
+        )
 
         return Response(AdminUserSerializer(target).data)

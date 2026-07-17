@@ -215,6 +215,41 @@ class FineServiceTests(TestCase):
         self.assertEqual(fine.status, Fine.Status.PAID)
         self.assertIsNotNone(fine.paid_at)
 
+    def test_mark_paid_on_still_open_loan_also_returns_the_book(self):
+        loan = Loan.objects.create(
+            user=self.user,
+            book=self.book,
+            due_date=timezone.localdate() - timedelta(days=1),
+        )
+        fine = FineService.recalculate_fine_for_active_loan(loan)
+        self.assertEqual(loan.status, Loan.Status.ACTIVE)  # still open, unreturned
+
+        FineService.mark_paid(fine)
+
+        loan.refresh_from_db()
+        self.book.refresh_from_db()
+        self.assertEqual(loan.status, Loan.Status.RETURNED)
+        self.assertIsNotNone(loan.returned_at)
+        self.assertEqual(self.book.available_copies, 1)  # was 0, incremented on return
+
+    def test_mark_paid_on_already_returned_loan_does_not_touch_loan_again(self):
+        loan = Loan.objects.create(
+            user=self.user,
+            book=self.book,
+            due_date=timezone.localdate() - timedelta(days=4),
+        )
+        returned_at = timezone.now() - timedelta(days=1)
+        loan.status = Loan.Status.RETURNED
+        loan.returned_at = returned_at
+        loan.save(update_fields=["status", "returned_at"])
+
+        fine = FineService.finalize_fine_on_return(loan)
+        FineService.mark_paid(fine)
+
+        loan.refresh_from_db()
+        self.assertEqual(loan.status, Loan.Status.RETURNED)
+        self.assertEqual(loan.returned_at, returned_at)  # untouched
+
     def test_waive_sets_status_and_timestamp(self):
         loan = Loan.objects.create(
             user=self.user,
@@ -487,16 +522,45 @@ class FineAPITests(APITestCase):
 
     def test_admin_can_pay_fine(self):
         self._login(self.admin)
-        response = self.client.post(f"/api/v1/fines/{self.own_fine.id}/pay/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.post(
+            (
+                f"/api/v1/fines/"
+                f"{self.own_fine.id}/pay/"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
         self.own_fine.refresh_from_db()
-        self.assertEqual(self.own_fine.status, Fine.Status.PAID)
+        self.own_loan.refresh_from_db()
+        self.book.refresh_from_db()
+
+        self.assertEqual(
+            self.own_fine.status,
+            Fine.Status.PAID,
+        )
+
+        self.assertEqual(
+            self.own_loan.status,
+            Loan.Status.RETURNED,
+        )
+
+        self.assertEqual(
+            self.book.available_copies,
+            1,
+        )
 
         from .models import Payment
 
-        # Admin manual settlement doesn't go through the gateway.
-        self.assertFalse(Payment.objects.filter(fine=self.own_fine).exists())
-
+        self.assertFalse(
+            Payment.objects.filter(
+                fine=self.own_fine
+            ).exists()
+        )
     def test_admin_can_waive_fine(self):
         self._login(self.admin)
         response = self.client.post(f"/api/v1/fines/{self.own_fine.id}/waive/")
@@ -509,3 +573,45 @@ class FineAPITests(APITestCase):
         self.client.post(f"/api/v1/fines/{self.own_fine.id}/pay/")
         response = self.client.post(f"/api/v1/fines/{self.own_fine.id}/pay/")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_paying_fine_automatically_returns_book(self):
+        self._login(self.member)
+
+        response = self.client.post(
+            (
+                f"/api/v1/fines/"
+                f"{self.own_fine.id}/pay/"
+            ),
+            {
+                "card_number":
+                    "4242424242424242"
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.own_loan.refresh_from_db()
+        self.book.refresh_from_db()
+        self.own_fine.refresh_from_db()
+
+        self.assertEqual(
+            self.own_fine.status,
+            Fine.Status.PAID,
+        )
+
+        self.assertEqual(
+            self.own_loan.status,
+            Loan.Status.RETURNED,
+        )
+
+        self.assertIsNotNone(
+            self.own_loan.returned_at
+        )
+
+        self.assertEqual(
+            self.book.available_copies,
+            1,
+        )

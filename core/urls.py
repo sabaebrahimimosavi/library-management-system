@@ -21,11 +21,6 @@ from django.views.static import serve as static_serve
 from django.conf import settings
 from django.conf.urls.static import static
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
-
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
@@ -33,7 +28,7 @@ from drf_spectacular.views import (
 )
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("django-admin/", admin.site.urls),
 
     path(
         "api/v1/auth/", 
@@ -41,13 +36,8 @@ urlpatterns = [
     ),
 
     path(
-        "api/v1/auth/login/",
-        TokenObtainPairView.as_view(),
-    ),
-
-    path(
-        "api/v1/auth/refresh/",
-        TokenRefreshView.as_view(),
+        "api/v1/auth/",
+        include("accounts.urls"),
     ),
 
     path(

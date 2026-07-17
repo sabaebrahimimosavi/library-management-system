@@ -18,7 +18,7 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from accounts.permissions import IsAdmin, IsMember, IsOwnerOrAdmin
+from accounts.permissions import IsAdmin, IsOwnerOrAdmin
 
 from .gateway import PaymentDeclined
 from .models import Fine
@@ -55,35 +55,87 @@ class FineViewSet(
 
     def get_permissions(self):
         if self.action == "waive":
-            return [permissions.IsAuthenticated(), IsAdmin()]
+            return [
+                permissions.IsAuthenticated(),
+                IsAdmin(),
+            ]
+
         if self.action == "pay":
-            return [permissions.IsAuthenticated(), IsMember(), IsOwnerOrAdmin()]
-        return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+            # Members may pay their own fines.
+            # Administrators may manually settle any fine.
+            return [
+                permissions.IsAuthenticated(),
+                IsOwnerOrAdmin(),
+            ]
+
+        return [
+            permissions.IsAuthenticated(),
+            IsOwnerOrAdmin(),
+        ]
 
     @action(detail=True, methods=["post"])
     def pay(self, request, pk=None):
         fine = self.get_object()
+
         if fine.status != Fine.Status.UNPAID:
             return Response(
-                {"detail": f"Fine is already {fine.status.lower()}."},
+                {
+                    "detail": (
+                        f"Fine is already "
+                        f"{fine.status.lower()}."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        card_number = request.data.get("card_number")
+        is_admin = (
+            request.user.role
+            == request.user.Roles.ADMIN
+        )
+
+        if is_admin:
+            # Administrative/manual settlement.
+            # No card or Payment record is required.
+            FineService.mark_paid(fine)
+
+            return Response(
+                FineSerializer(fine).data,
+                status=status.HTTP_200_OK,
+            )
+
+        # Regular members must use online card payment.
+        card_number = request.data.get(
+            "card_number"
+        )
+
         if not card_number:
             return Response(
-                {"detail": "card_number is required to pay online."},
+                {
+                    "detail": (
+                        "card_number is required "
+                        "to pay online."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            FineService.pay_online(fine=fine, user=request.user, card_number=card_number)
-        except PaymentDeclined as exc:
-            return Response(
-                {"detail": str(exc)}, status=status.HTTP_402_PAYMENT_REQUIRED
+            FineService.pay_online(
+                fine=fine,
+                user=request.user,
+                card_number=card_number,
             )
 
-        return Response(FineSerializer(fine).data)
+        except PaymentDeclined as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_402_PAYMENT_REQUIRED,
+            )
+
+        return Response(
+            FineSerializer(fine).data,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"])
     def waive(self, request, pk=None):
