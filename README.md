@@ -524,10 +524,3 @@ Consult Swagger or ReDoc for current request fields and endpoint details.
 - Local media files are not automatically restored after cloning the repository.
 - The frontend depends on CDN-hosted Vue, Vue Router, Bootstrap, fonts, and icons.
 
----
-
-## License
-
-No license for the application source code is currently declared. Add a `LICENSE` file before distributing or publishing the project under a specific license.
-
-Imported third-party datasets and cover images remain subject to their own licenses and usage terms.
